@@ -73,6 +73,9 @@ plotdir = homedir+'/Virgo/plots/'
 htmldir = homedir+'/HTML-building/galaxy/' #set to where the html resources should be (parent folder of the different html folders)
 datadir = homedir+'/masking/' #set to where the completed mask fits are
 
+#make directory if doesn't exist
+os.makedirs(plotdir, exist_ok=True)
+
 
 # %%
 
@@ -89,23 +92,92 @@ overlap_VFID_list = [711, 712, 2665, 2667, 4177, 4179, 4961, 4962]
 #df_clean = df.copy()
 
 #removes rows where VF_ID column contains int value in overlap_VFID_list
-df_clean = df[~df['VF_ID'].isin(overlap_VFID_list)]
+#df_clean = df[~df['VF_ID'].isin(overlap_VFID_list)]
 
-#df_clean
+sma_labels = [f'SMA_AP0{i}' for i in range(1,9)]
+
 
 # %%
 
-#force show every column
-pd.set_option('display.max_seq_items', None)
+#create and save all the 70 vs. 100 flux plots
 
-#print(df_clean.columns)
+for sma in sma_labels:
 
-x_axis = '70Flux_SMA_AP08'
-y_axis = '100Flux_SMA_AP08'
+    fig, ax = plt.subplots(figsize=(8,6))
 
-plt.scatter(df_clean[x_axis], df_clean[y_axis], alpha=0.5)
-plt.xlabel(x_axis)
-plt.ylabel(y_axis)
-plt.title(x_axis+' vs. '+ y_axis)
+    x_axis = f'70Flux_{sma}'
+    y_axis = f'100Flux_{sma}'
+
+    ax.scatter(df[x_axis], df[y_axis], alpha=0.5)
+
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+
+    ax.set_xlabel(f'{x_axis} (Jy)')
+    ax.set_ylabel(f'{y_axis} (Jy)')
+    ax.set_title(x_axis+' vs. '+ y_axis)
 
 
+    savepath = os.path.join(plotdir, f"{x_axis}-vs-{y_axis}.png")
+
+    print('Saving:', savepath)
+
+    plt.savefig(savepath, dpi=150)
+
+    plt.close()
+    
+
+#create and save all the 100 vs. 160 flux plots
+for sma in sma_labels:
+
+    fig, ax = plt.subplots(figsize=(8,6))
+
+    x_axis = f'100Flux_{sma}'
+    y_axis = f'160Flux_{sma}'
+
+    ax.scatter(df[x_axis], df[y_axis], alpha=0.5)
+
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+
+    ax.set_xlabel(f'{x_axis} (Jy)')
+    ax.set_ylabel(f'{y_axis} (Jy)')
+    ax.set_title(x_axis+' vs. '+ y_axis)
+
+
+    savepath = os.path.join(plotdir, f"{x_axis}-vs-{y_axis}.png")
+
+    print('Saving:', savepath)
+
+    plt.savefig(savepath, dpi=150)
+
+    plt.close()
+
+
+#create and save all the 70 vs. 160 flux plots
+for sma in sma_labels:
+
+    fig, ax = plt.subplots(figsize=(8,6))
+
+    x_axis = f'70Flux_{sma}'
+    y_axis = f'160Flux_{sma}'
+
+    ax.scatter(df[x_axis], df[y_axis], alpha=0.5)
+
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+
+    ax.set_xlabel(f'{x_axis} (Jy)')
+    ax.set_ylabel(f'{y_axis} (Jy)')
+    ax.set_title(x_axis+' vs. '+ y_axis)
+
+
+    savepath = os.path.join(plotdir, f"{x_axis}-vs-{y_axis}.png")
+
+    print('Saving:', savepath)
+
+    plt.savefig(savepath, dpi=150)
+
+    plt.close()
+    
+ 

@@ -76,13 +76,13 @@ rhalfasec = {}
 #initialize dictionary for ellipse fitting
 ellipse = {}
 isolist = {}
-
+  
 #set the home path
 os.environ['HOME'] = '/Users/madeline.evenson/Research'
 homedir = os.getenv('HOME')
 tabledir = homedir+'/Virgo/tables/'
 plotdir = homedir+'/Virgo/plots/'
-htmldir = homedir+'/HTML-building/galaxy/' #set to where the html resources should be (parent folder of the different html folders)
+htmldir = homedir+'/Virgo/HTML-building/galaxy/' #set to where the html resources should be (parent folder of the different html folders)
 datadir = homedir+'/masking/' #set to where the completed mask fits are
 
 
@@ -191,6 +191,7 @@ for i in range(len(galaxy)):
         ###### read image ######
         
         data, header = fits.getdata(found_file, header=True)
+        print(header['BUNIT'])
         wcs = WCS(header)
         
         #get CD matrix
