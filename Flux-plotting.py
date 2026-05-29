@@ -87,7 +87,7 @@ df = pd.read_csv(csv_file)
 
 
 #super conservative cuts --> can maybe keep 2665/2667, 4177/4179
-overlap_VFID_list = [711, 712, 2665, 2667, 4177, 4179, 4961, 4962]
+#overlap_VFID_list = [711, 712, 2665, 2667, 4177, 4179, 4961, 4962]
 
 #df_clean = df.copy()
 
@@ -181,3 +181,95 @@ for sma in sma_labels:
     plt.close()
     
  
+    
+# %%
+ 
+#calculate total flux across all apertures
+df['70_total_flux'] = 0
+df['100_total_flux'] = 0
+df['160_total_flux'] = 0
+
+for sma in sma_labels:
+    df['70_total_flux'] += df[f'70Flux_{sma}']
+    df['100_total_flux'] += df[f'100Flux_{sma}']
+    df['160_total_flux'] += df[f'160Flux_{sma}']
+
+
+
+#plot 70 vs 100 total flux
+fig, ax = plt.subplots(figsize=(8,6))
+
+x_axis = '70_total_flux'
+y_axis = '100_total_flux'
+
+ax.scatter(df[x_axis], df[y_axis], alpha = 0.5)
+
+ax.set_xscale('log')
+ax.set_yscale('log')
+
+ax.set_xlabel('70 Total Flux (Jy)')
+ax.set_ylabel('100 Total Flux (Jy')
+ax.set_title('70 vs. 100 Total Flux')
+
+savepath = os.path.join(plotdir, f"{x_axis}-vs-{y_axis}.png")
+
+print('Saving:', savepath)
+
+plt.savefig(savepath, dpi=150)
+
+plt.close()
+
+
+
+#plot 100 vs 160 total flux
+fig, ax = plt.subplots(figsize=(8,6))
+
+x_axis = '100_total_flux'
+y_axis = '160_total_flux'
+
+ax.scatter(df[x_axis], df[y_axis], alpha = 0.5)
+
+ax.set_xscale('log')
+ax.set_yscale('log')
+
+ax.set_xlabel('100 Total Flux (Jy)')
+ax.set_ylabel('160 Total Flux (Jy')
+ax.set_title('100 vs. 160 Total Flux')
+
+savepath = os.path.join(plotdir, f"{x_axis}-vs-{y_axis}.png")
+
+print('Saving:', savepath)
+
+plt.savefig(savepath, dpi=150)
+
+plt.close()
+
+
+
+#plot 70 vs 160 total flux
+fig, ax = plt.subplots(figsize=(8,6))
+
+x_axis = '70_total_flux'
+y_axis = '160_total_flux'
+
+ax.scatter(df[x_axis], df[y_axis], alpha = 0.5)
+
+ax.set_xscale('log')
+ax.set_yscale('log')
+
+ax.set_xlabel('70 Total Flux (Jy)')
+ax.set_ylabel('160 Total Flux (Jy')
+ax.set_title('70 vs. 160 Total Flux')
+
+savepath = os.path.join(plotdir, f"{x_axis}-vs-{y_axis}.png")
+
+print('Saving:', savepath)
+
+plt.savefig(savepath, dpi=150)
+
+plt.close()
+
+
+
+
+

@@ -22,7 +22,7 @@ os.environ['HOME'] = '/Users/madeline.evenson/Research' #general path for all th
 homedir = os.getenv('HOME')
 tabledir = homedir+'/Virgo/tables/'
 plotdir = homedir+'/Virgo/plots/'
-htmldir = homedir+'/HTML-building/galaxy/' #set to where the html resources should be (parent folder of the different html folders)
+htmldir = homedir+'/Virgo/HTML-building/galaxy/' #set to where the html resources should be (parent folder of the different html folders)
 datadir = homedir+'/masking/' #set to where the completed mask fits are
 
 from masking_funct import *
@@ -56,7 +56,7 @@ with open(os.path.join(homedir, "HTML-building/output.html"), "w") as html:
     html.write('table, td, th {padding: 5px; text-align: center; border: 2px solid black;}\n')
     html.write('p {display: inline-block;}\n')
     html.write('</style>\n')
-    html.write('<table><tr><th>#</th><th>VFID</th><th>Name</th><th>Legacy Image</th><th>Herschel-UnimapBlue (70microns)</th><th>Herschel-UnimapBlue (100microns)</th><th>Herschel-UnimapRed (160microns)</th><th>RA</th><th>DEC</th><th>B/G significant mask</th><th>R significant mask</th></tr>')
+    html.write('<table><tr><th>#</th><th>VFID</th><th>Name</th><th>Legacy Image</th><th>Herschel-UnimapBlue (70microns)</th><th>Herschel-UnimapGreen (100microns)</th><th>Herschel-UnimapRed (160microns)</th><th>RA</th><th>DEC</th><th>B/G significant mask</th><th>R significant mask</th></tr>')
     
     
     #read the CSV file containing the galaxy data

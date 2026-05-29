@@ -154,7 +154,7 @@ for i in range(len(galaxy)):
     PAN_sky = (galaxy['PA_MOMENT'][i] + 90) * np.pi/180
     
     path = os.path.join(datadir, 'pipeline', galaxy_name)
-    legacy_path = os.path.join('/Users/madeline.evenson/Research/HTML-building/galaxy/png/', f"{VFID}-{galaxy_name}-LS.jpg")
+    legacy_path = os.path.join('/Users/madeline.evenson/Research/Virgo/HTML-building/galaxy/png/', f"{VFID}-{galaxy_name}-LS.jpg")
     
     if not os.path.exists(path):
         print('Missing pipeline folder:', path)
@@ -316,7 +316,7 @@ galaxy
 # In[13]:
 
 
-#profile graphing (unfinished)
+#profile graphing 
 
 #load the photometry data
 csv_file = tabledir + '/Photometrytesting2.csv'
