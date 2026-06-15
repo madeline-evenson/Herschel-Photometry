@@ -43,7 +43,6 @@ from photutils.aperture import CircularAperture
 from photutils.isophote import EllipseGeometry
 from photutils.aperture import EllipticalAperture
 from photutils.isophote import Ellipse
-from photutils import aperture_photometry
 
 from scipy.stats import scoreatpercentile
 from scipy import stats
@@ -83,7 +82,14 @@ datadir = homedir+'/masking/' #set to where to find the masking data and images 
 from masking_funct import *
 
 
-# **Tom's notes:** This next codeblock is used to find the central pixels that corresponds to the galaxy's center. We need to do this in order to impose the masks on correctly, because the masking files always have the galaxy's center as it central pixel, and so we want to impose those masks by lining up the central pixels on top of the galaxy's center pixel in the Herschel images. The program does it by first reading in the respective .fits images, taking the galaxy's RA and DEC and converting it into pixels, and then recording the pixel value into the spreadsheet. There is also a check on the WISE mask images to make sure the pixel coordinates are correct there too. 
+# **Tom's notes:** This next codeblock is used to find the central pixels that corresponds to the galaxy's 
+    #center. We need to do this in order to impose the masks on correctly, because the masking 
+    #files always have the galaxy's center as it central pixel, and so we want to impose those 
+    #masks by lining up the central pixels on top of the galaxy's center pixel in the Herschel 
+    #images. The program does it by first reading in the respective .fits images, taking the galaxy's 
+    #RA and DEC and converting it into pixels, and then recording the pixel value into the spreadsheet. 
+    #There is also a check on the WISE mask images to make sure the pixel coordinates are correct 
+    #there too. 
 
 # In[14]:
 
@@ -93,7 +99,7 @@ from masking_funct import *
 #input CSV file with galaxy data
 csv_file = tabledir + 'Photometrytesting.csv'
 galaxy_data = pd.read_csv(csv_file)
-#galaxy_data
+print(galaxy_data.columns)
 
 #prepare output CSV
 output_data = []
@@ -202,7 +208,10 @@ pixel_data = pd.read_csv(csv_file)
 pixel_data
 
 
-# **Tom's note:** Once we have the coordinates of the central pixels, we can then impose the masks onto the Herschel images using the following code, which takes respective galaxies and their masks by cross-checking the galaxy's names, scales the masks according to the pixel scales of the Herschel images, and imposes them onto the image. The program will then re-output the fits images in a seperate mask folder. 
+# **Tom's note:** Once we have the coordinates of the central pixels, we can then impose the masks onto the 
+    #Herschel images using the following code, which takes respective galaxies and their masks by cross-checking 
+    #the galaxy's names, scales the masks according to the pixel scales of the Herschel images, and imposes them 
+    #onto the image. The program will then re-output the fits images in a seperate mask folder. 
 
 # In[16]:
 

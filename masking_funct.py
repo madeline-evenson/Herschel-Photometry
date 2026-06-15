@@ -19,6 +19,8 @@ import os
 import warnings
 warnings.filterwarnings('ignore')
 
+from numpy.ma import is_masked
+
 from astropy.table import Table
 from astropy.io.ascii import masked
 from astropy.io import ascii
@@ -49,7 +51,6 @@ from photutils.detection import DAOStarFinder
 from photutils.aperture import CircularAperture
 from photutils.isophote import EllipseGeometry
 from photutils.aperture import EllipticalAperture
-from photutils import aperture_photometry
 
 
 # In[5]:
@@ -129,45 +130,105 @@ def find_files(destination_folder, partial_name):
 
 
 #function to overlay mask on original FITS image and save as a new FITS file
-def overlay_mask_on_fits(fits_file, mask_file, csv_file, output_fits, n, coords_x, coords_y):
+def overlay_mask_on_fits(
+    fits_file,
+    mask_file,
+    csv_file,
+    output_fits,
+    n,
+    coords_x,
+    coords_y,
+    RA,
+    DEC
+):
 
-    #load the original FITS image and its WCS
-    original_fits_data, original_fits_header = fits.getdata(fits_file, header=True)
+    # load the original FITS image and its WCS
+    original_fits_data, original_fits_header = fits.getdata(
+        fits_file,
+        header=True
+    )
     original_wcs = WCS(original_fits_header)
 
-    #load the mask FITS image and its WCS
-    mask_fits_data, mask_fits_header = fits.getdata(mask_file, header=True)
+    # load the mask FITS image and its WCS
+    mask_fits_data, mask_fits_header = fits.getdata(
+        mask_file,
+        header=True
+    )
     mask_wcs = WCS(mask_fits_header)
 
-    #extract the central X and Y pixel coordinates (assuming columns are named 'x' and 'y')
+    # if coordinates are missing, recompute them from RA/DEC
+    if (
+        np.ma.is_masked(coords_x)
+        or np.ma.is_masked(coords_y)
+        or not np.isfinite(coords_x)
+        or not np.isfinite(coords_y)
+    ):
+
+        print(
+            f"Coordinates missing; recomputing from RA/DEC "
+            f"(RA={RA}, DEC={DEC})"
+        )
+
+        coords_x, coords_y = original_wcs.all_world2pix(
+            RA,
+            DEC,
+            0
+        )
+
+    # if still bad, skip
+    if (
+        not np.isfinite(coords_x)
+        or not np.isfinite(coords_y)
+    ):
+        print("Could not determine valid image coordinates")
+        return
+
+    # extract central pixel coordinates
     central_x = int(coords_x)
     central_y = int(coords_y)
 
-    #reproject the mask to the original FITS image WCS
-    reprojected_mask, footprint = reproject_interp((mask_fits_data, mask_wcs), original_wcs, shape_out=original_fits_data.shape)
+    # reproject mask to Herschel image WCS
+    reprojected_mask, footprint = reproject_interp(
+        (mask_fits_data, mask_wcs),
+        original_wcs,
+        shape_out=original_fits_data.shape
+    )
 
-    #ensure that the central pixel coordinates are within the bounds of the original image
+    # clip coordinates to image boundaries
     height, width = original_fits_data.shape
-    central_x = np.clip(central_x, 0, width - 1)
-    central_y = np.clip(central_y, 0, height - 1)
 
-    #create a copy of the original FITS data and voerlay the reprojected mask
+    central_x = np.clip(
+        central_x,
+        0,
+        width - 1
+    )
+
+    central_y = np.clip(
+        central_y,
+        0,
+        height - 1
+    )
+
+    # overlay mask
     combined_data = original_fits_data.copy()
 
-    #overlay the mask where the mask is non-zero (assumes mask values are 0 or 1)
-    combined_data[reprojected_mask > 0] = np.max(original_fits_data) #overlay mask pixels
+    combined_data[reprojected_mask > 0] = np.max(
+        original_fits_data
+    )
 
-    #ensure that the central pixel is not masked unless explicitly masked in the mask file
+    # restore central pixel if it was not masked
     if reprojected_mask[central_y, central_x] == 0:
-        #if the mask does not cover the central pixel restore the original value
-        combined_data[central_y, central_x] = original_fits_data[central_y, central_x]
-    #else:
-        #optionally you can mark the central pixel differently if the mask explicitly masks it 
-        #print(f'Central pixel ({central_x}, {central_y}) is masked in the mask file.')
+        combined_data[central_y, central_x] = (
+            original_fits_data[central_y, central_x]
+        )
 
-    #save the results as a new FITS file
-    fits.writeto(output_fits, combined_data, original_fits_header, overwrite=True)
-
+    # save result
+    fits.writeto(
+        output_fits,
+        combined_data,
+        original_fits_header,
+        overwrite=True
+    )
 
 # In[ ]:
 

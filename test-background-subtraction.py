@@ -335,6 +335,46 @@ plt.savefig(savepath, dpi=150)
 
 
 
+# %%
+
+
+#this part of the notebook has the goal of completing background subtraction once a mask is in place
+#using photutils and tutorials from astropy
+
+
+from astropy.stats import sigma_clipped_stats, SigmaClip
+from photutils.segmentation import detect_threshold, detect_sources
+from photutils.utils import circular_footprint
+
+sigma_clip = SigmaClip(sigma=3.0, maxiters=10)
+threshold = detect_threshold(final_image, nsigma=2.0, sigma_clip=sigma_clip)
+segment_img = detect_sources(data, threshold, npixels=10)
+footprint = circular_footprint(radius=10)
+
+mask = segment_img.make_source_mask(footprint=footprint)
+
+mean, median, std = sigma_clipped_stats(final_image, sigma=3.0, mask=mask)
+
+print(np.array((mean, median, std)))
+
+
+
+#fig, ax = plt.subplots(figsize=(6,6))
+#ax.imshow(final_image - median, cmap='gray')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         
         
