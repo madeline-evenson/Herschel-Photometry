@@ -16,66 +16,29 @@
 
 #import necessary libraries
 
+import photutils
+print(photutils.__version__)
+
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
-#get_ipython().run_line_magic('matplotlib', 'inline')
-import astropy.units as u
 import numpy as np
-import pandas as pd
-import glob
-import sys
 import os
 #import wget
 
 from astropy.table import Table
 from astropy.wcs import WCS
-from astropy.coordinates import Angle
-from astropy.io.ascii import masked
-from astropy.io import ascii
 from astropy.io import fits
-from astropy.nddata import CCDData
-from astropy.stats import sigma_clipped_stats
-from astropy.stats import gaussian_sigma_to_fwhm
-from astropy.visualization import simple_norm
-from astropy.visualization import SqrtStretch
-from astropy.visualization import ImageNormalize
-from astropy.visualization import LogStretch
-from astropy.visualization import MinMaxInterval
 
-from matplotlib.patches import Rectangle
-from matplotlib.collections import PatchCollection
 from matplotlib import colors
 
-from photutils.detection import DAOStarFinder
-from photutils.aperture import CircularAperture
-from photutils.isophote import EllipseGeometry
-from photutils.aperture import EllipticalAperture
-from photutils.isophote import Ellipse
 from photutils.aperture import aperture_photometry
-from astropy.wcs.utils import proj_plane_pixel_scales
-
-from scipy.stats import scoreatpercentile
-from scipy import stats
 
 import warnings
 warnings.filterwarnings('ignore')
 
-from reproject import reproject_interp
-from IPython.display import clear_output
 
 mycolors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
-#define an empty dictionary that will contain the EllipseGeometry instance
-geometry = {}
-initparams = {}
-
-#initialize dictionary for half-light radii
-rhalfpix = {}
-rhalfasec = {}
-
-#initialize dictionary for ellipse fitting
-ellipse = {}
-isolist = {}
   
 #set the home path
 os.environ['HOME'] = '/Users/madeline.evenson/Research'

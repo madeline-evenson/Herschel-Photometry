@@ -9,49 +9,20 @@
 import matplotlib.pyplot as plt
 import os #interacting with operating system (files, directories, etc)
 import numpy as np
-import glob
-#import wget
-import sys
-
-import matplotlib.image as mpimg
-import astropy.units as u
 
 import warnings
 warnings.filterwarnings('ignore')
 
-from matplotlib.patches import Rectangle
-from matplotlib.collections import PatchCollection
-from matplotlib import colors
 
 mycolors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
-from astropy.table import Table
-from astropy.coordinates import Angle
-from astropy.io import ascii
-from astropy.io import fits
-from astropy.nddata import CCDData
-from astropy.wcs import WCS
-from astropy.stats import sigma_clipped_stats
-from astropy.stats import gaussian_sigma_to_fwhm
-from astropy.visualization import simple_norm
-from astropy.visualization import SqrtStretch
 from astropy.visualization import ImageNormalize
 from astropy.visualization import LogStretch
-from astropy.visualization import MinMaxInterval
 
-from scipy import stats
 from scipy.stats import scoreatpercentile
 
-from reproject import reproject_interp
-
-from IPython.display import clear_output
-
-from photutils.detection import DAOStarFinder
-from photutils.aperture import CircularAperture
-from photutils.isophote import EllipseGeometry
 from photutils.aperture import EllipticalAperture
-from photutils.isophote import Ellipse
-from photutils import aperture_photometry
+from photutils.aperture import aperture_photometry
 
 
 # In[7]:
