@@ -371,6 +371,11 @@ for i in range(len(galaxy)):
         #create full background plane model
         background_plane = c0*x + c1*y + c2
         
+        #create new background
+        plane_subtracted_background_fits = mask_data - background_plane
+        
+        plane_subtracted_path = os.path.join(datadir, 'plane-subtracted-background-fits', f'{galaxy_name}_{suffix}_plane_subtracted_background.fits')
+        fits.writeto(plane_subtracted_path, plane_subtracted_background_fits, header=mask_header, overwrite=True)
         
         #read in original image fits data and subtract plane
         image_data, image_header = fits.getdata(image_file, header=True)
@@ -383,11 +388,6 @@ for i in range(len(galaxy)):
         
         #write median-subtracted fits files to output FITS file path
         fits.writeto(output_fits, subtracted_image_data, header=image_header, overwrite=True)
-
-
-
-
-
 
 
 
