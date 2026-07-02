@@ -292,8 +292,8 @@ def create_combined_mask(
     #build large ellipse --> started as 3x but that was way too big on images so reduced to 2.5
     aperture = EllipticalAperture(
         (coords_x, coords_y),
-        2.5 * SMA_pix,
-        2.5 * SMB_pix,
+        2 * SMA_pix,
+        2 * SMB_pix,
         theta=PAN
         )
 
@@ -457,22 +457,21 @@ for i in range(len(galaxy)):
                     #if wise-mask exists, overlay it
                     overlay_mask_on_fits(found_file, wise_mask_file, csv_file, output_fits, i, coords_x, coords_y, RA, DEC)  
                     
-                    with fits.open(found_file) as hdul:
-                        hdul.info()
-                        image_hdu = None
+                    with fits.open(found_file, lazy_load_hdus=False) as hdul:
+                        print("HDU count:", len(hdul))
 
-                        with fits.open(found_file, lazy_load_hdus=False) as hdul:
-                            print("HDU count:", len(hdul))
-                            image_hdu = None
+                        image_data = None
+                        image_header = None
 
-                            for k in range(len(hdul)):
-                                if hdul[k].data is not None:
-                                    image_hdu = hdul[k]
-                                    break
+                        for hdu in hdul:
+                            if hdu.data is not None:
+                                image_data = hdu.data.copy()      # copy while file is open
+                                image_header = hdu.header.copy()  # copy header too
+                                break
 
-
-                        image_data = image_hdu.data.copy()
-                        image_header = image_hdu.header
+                    if image_data is None:
+                        print(f"No image data found in {found_file}")
+                        continue
                                 
                     
                     #call the create_combined_mask function for the wise masks
@@ -499,6 +498,9 @@ for i in range(len(galaxy)):
 
                     if combined_mask is None:
                         continue
+                    
+                    print('Image shape:', image_data.shape)
+                    print('Masked fraction:', np.sum(combined_mask) / combined_mask.size)
                     
                     # save image of the new combined mask
                     plt.figure(figsize=(6, 6))
@@ -549,21 +551,21 @@ for i in range(len(galaxy)):
                     overlay_mask_on_fits(found_file, r_mask_file, csv_file, output_fits, i, coords_x, coords_y, RA, DEC)
                     
                         
-                    with fits.open(found_file) as hdul:
-                        image_hdu = None
+                    with fits.open(found_file, lazy_load_hdus=False) as hdul:
+                        print("HDU count:", len(hdul))
+
+                        image_data = None
+                        image_header = None
 
                         for hdu in hdul:
                             if hdu.data is not None:
-                                image_hdu = hdu
+                                image_data = hdu.data.copy()      # copy while file is open
+                                image_header = hdu.header.copy()  # copy header too
                                 break
 
-                        if image_hdu is None:
-                            print(f"No image data found in {found_file}")
-                            continue
-
-
-                        image_data = image_hdu.data.copy()
-                        image_header = image_hdu.header
+                    if image_data is None:
+                        print(f"No image data found in {found_file}")
+                        continue
                     
                     
                     combined_mask = create_combined_mask(
@@ -581,6 +583,9 @@ for i in range(len(galaxy)):
 
                     if combined_mask is None:
                         continue
+                    
+                    print('Image shape:', image_data.shape)
+                    print('Masked fraction:', np.sum(combined_mask) / combined_mask.size)
                     
                     # save image of the new combined mask
                     plt.figure(figsize=(6, 6))

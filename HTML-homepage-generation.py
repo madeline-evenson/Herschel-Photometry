@@ -48,7 +48,7 @@ from photometry_funct import *
 
 
 #open the HTML file in write mode
-with open(os.path.join(homedir, "HTML-building/output.html"), "w") as html:
+with open(os.path.join(homedir, "Virgo/HTML-building/output.html"), "w") as html:
     #write the HTML code line by line
     html.write('<html><body>\n')
     html.write('<title>Herschel images</title>\n')

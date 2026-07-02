@@ -25,11 +25,14 @@ os.environ['HOME'] = '/Users/madeline.evenson/Research'
 homedir = os.getenv('HOME')
 tabledir = homedir+'/Virgo/tables/'
 plotdir = homedir+'/Virgo/plots/'
-htmldir = homedir+'/HTML-building/galaxy/' #set to where the html resources should be (parent folder of the different html folders)
+htmldir = homedir+'/Virgo/HTML-building/galaxy/' #set to where the html resources should be (parent folder of the different html folders)
 datadir = homedir+'/masking/' #set to where the completed mask fits are
 
 #directory for original fits 
 fitsdir = datadir + 'pipeline/'
+
+#directory for original masks
+mask_dir = datadir + '/masked/'
 
 #directory for new masks
 new_mask_dir = datadir + '/new_masked/'
@@ -44,41 +47,44 @@ plane_subtracted_background_fits = datadir + '/plane-subtracted-background-fits'
 plane_subtracted_fits = datadir + '/plane-subtracted-fits/'
 
 #directory for plane-subtracted background flux histograms
-psub_bg_flux_hists = datadir + '/psub-bg-flux-hists/'
+psub_bg_flux_hists = htmldir + 'psub-bg-flux-hists/'
     #psub = plane subtracted
     #bg = background
     
 #directory for horizontal and vertical cut flux profiles
-psub_bg_h_cut_profiles = datadir + '/psub-bg-h-cut-profiles'
-psub_bg_v_cut_profiles = datadir + '/psub-bg-v-cut-profiles'
+psub_bg_h_cut_profiles = htmldir + '/psub-bg-h-cut-profiles'
+psub_bg_v_cut_profiles = htmldir + '/psub-bg-v-cut-profiles'
+
+#directory for 2x3 plots comparing original galaxy fits with plane-subtracted background fits
+bg_comparison_plots = htmldir + '/bg-comparison-plots'
 
 
 # %%
 
 #first create flux histogram for one example galaxy --> NGC5290
 
-file = plane_subtracted_background_fits + '/NGC5290_R_plane_subtracted_background.fits'
+#file = plane_subtracted_background_fits + '/NGC5290_R_plane_subtracted_background.fits'
 
-data, header = fits.getdata(file, header=True)
+#data, header = fits.getdata(file, header=True)
 #print(header)
 
-plt.figure(figsize=(6,6))
-plt.imshow(data, cmap='viridis', origin='lower')
-plt.colorbar()
+#plt.figure(figsize=(6,6))
+#plt.imshow(data, cmap='viridis', origin='lower')
+#plt.colorbar()
 
 
-fig, ax = plt.subplots(figsize=(6,6))
-ax.hist(data, bins=20, edgecolor='black')
-ax.set_title(f'NGC5290 R Background Fluxes')
-ax.set_ylabel('Counts')
-ax.set_xlabel('Flux (Jy)')
+#fig, ax = plt.subplots(figsize=(6,6))
+#ax.hist(data, bins=20, edgecolor='black')
+#ax.set_title(f'NGC5290 R Background Fluxes')
+#ax.set_ylabel('Counts')
+#ax.set_xlabel('Flux (Jy)')
 
 
 # %%
 
 #now create directory of background flux histograms
 
-csv_file = tabledir+'/Photometrytesting.csv'
+csv_file = tabledir+'/Photometrytesting2.csv'
 #csv_file2 = tabledir+'/Herschelstuff.csv'
 
 galaxy = Table.read(csv_file)
@@ -125,17 +131,42 @@ for i in range(len(galaxy)):
             print('No file found:', galaxy_name, suffix)
             continue
 
+        original_path = os.path.join(mask_dir, f'{galaxy_name}_masked{suffix}.fits')
             
-        #read in new mask data and calculate median   
+        #read in data
         background_data, background_header = fits.getdata(background_path, header=True)
+        original_data, original_header = fits.getdata(original_path, header=True)
+        
+        #calculate standard deviation
+        background_std = np.nanstd(background_data)
+        original_std = np.nanstd(original_data)
+        
+        #use std to create dynamic bin sizes
+        b_bin_width = background_std / 4
+        o_bin_width = original_std / 4
+        
+        b_dynamic_bins = np.arange(np.nanmin(background_data), np.nanmax(background_data) + b_bin_width, b_bin_width)
+        o_dynamic_bins = np.arange(np.nanmin(original_data), np.nanmax(original_data) + o_bin_width, o_bin_width)
+        
         
         
         fig, ax = plt.subplots(figsize=(6,6))
-        ax.hist(background_data.ravel(), bins=30, edgecolor='black')
-        ax.set_xlim(-0.07, 0.07)
+        ax.hist(background_data.ravel(), bins=b_dynamic_bins, density=True, color='mediumorchid', edgecolor='mediumorchid', alpha=0.4, label='Plane-Sub')
+        ax.hist(original_data.ravel(), bins=o_dynamic_bins, density=True, color='deepskyblue', edgecolor='deepskyblue', alpha=0.4, label='Tom\'s Mask')
+        
+        ax.axvline(x=np.nanmedian(background_data), color='mediumorchid', linewidth=2, linestyle='--', label='Plane-Sub Median')
+        ax.axvline(x=np.nanmedian(background_data) - background_std, color='mediumorchid', linestyle='--', linewidth=1)
+        ax.axvline(x=np.nanmedian(background_data) + background_std, color='mediumorchid', linestyle='--', linewidth=1)
+        
+        ax.axvline(x=np.nanmedian(original_data), color='dodgerblue', linewidth=2, linestyle='--', label='Tom\'s Mask Median')
+        ax.axvline(x=np.nanmedian(original_data) - original_std, color='dodgerblue', linestyle='--', linewidth=1)
+        ax.axvline(x=np.nanmedian(background_data) + original_std, color='dodgerblue', linestyle='--', linewidth=1)
+        ax.set_xlim(-5 * background_std, 5 * background_std)
+        
         ax.set_title(f'{galaxy_name} {suffix} Background Fluxes')
         ax.set_ylabel('Counts')
         ax.set_xlabel('Flux (Jy)')
+        ax.legend()
         
         output_path = psub_bg_flux_hists + f'{galaxy_name}_{suffix}_psub_bg_flux_hist.png'
         fig.savefig(output_path, dpi=100)
@@ -296,6 +327,7 @@ for i in range(len(galaxy)):
             good = np.isfinite(profile)
 
             ax.plot(x, profile, color='C0', label='Data')
+            ax.axhline(y=0, color='k', linestyle='--', linewidth=2, label='Flux = 0')
 
             #only find fit if there are more than 10 finite points on the profile
             if np.sum(good) >= 10:
@@ -368,6 +400,7 @@ for i in range(len(galaxy)):
             good = np.isfinite(profile)
 
             ax.plot(y, profile, color='C0', label='Data')
+            ax.axhline(y=0, color='k', linestyle='--', linewidth=2, label='Flux = 0')
 
             if np.sum(good) >= 10:
 

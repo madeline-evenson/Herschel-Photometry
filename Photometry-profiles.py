@@ -135,7 +135,7 @@ for i in range(len(galaxy)):
         
         ###### find image file #######
         
-        masked_path = os.path.join(datadir, 'masked', f'{galaxy_name}_masked{suffix}.fits')
+        masked_path = os.path.join(datadir, 'plane-subtracted-fits', f'{galaxy_name}_{suffix}_plane_subtracted.fits')
         
         if os.path.exists(masked_path):
             found_file = masked_path
@@ -288,7 +288,6 @@ galaxy = Table.read(csv_file)
 #define semi-major axis (SMA) and flux labels
 sma_labels = [f'SMA_AP0{i}' for i in range(1, 9)]
 wavelengths = [70, 100, 160]
-colors = ['blue', 'green', 'red'] #corresponding colors for wavelengths
 
 
 #loop over each galaxy
@@ -313,7 +312,7 @@ for i in range(len(galaxy)):
                     break
             
         if has_valid:
-            valid_bands.append((wave, colors[j]))
+            valid_bands.append((wave, mycolors[j]))
 
     #skip galaxy if no valid bands:
     if len(valid_bands) == 0:
@@ -403,12 +402,16 @@ for i in range(len(galaxy)):
             axes[1, col_idx].set_xlabel('Semi-Major Axis (arcsec)')
             axes[1, col_idx].set_ylabel('Surface Brightness (Jy/arcsec²)')
         
-    #adjust layout
-    plt.tight_layout()
+    #title figure
+    fig.suptitle(f'{VFID} — {galaxy_name} Photometry Profiles',
+             fontsize=18, fontweight='bold')
 
+    #adjust layout
+    fig.tight_layout(rect=[0, 0, 1, 0.96])
+    
     #save figure
     output_path = f'{htmldir}/profiles/{VFID}-{galaxy_name}_flux_sb_profile.png'
-    plt.savefig(output_path, dpi=150)
+    fig.savefig(output_path, dpi=150)
     plt.close(fig)
 
 print('All flux and surface brightness profiles have been generated.')
