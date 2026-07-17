@@ -23,6 +23,7 @@ tabledir = homedir+'/Virgo/tables/'
 plotdir = homedir+'/Virgo/plots/'
 htmldir = homedir+'/HTML-building/galaxy/' #set to where the html resources should be (parent folder of the different html folders)
 datadir = homedir+'/masking/' #set to where the completed mask fits are
+cigaledir = homedir + '/cigale/'
 
 #directory for original fits 
 fitsdir = datadir + 'pipeline/'
@@ -76,12 +77,12 @@ column_pairs = [
     ('FLUX_AP06_G', 'A(G)_SFD'),
     ('FLUX_UNCERT_AP06_G', 'A(G)_SFD'),
     ('FLUX_AP06_R', 'A(R)_SFD'),
-    ('FLUX_UNCERT_AP06_R', 'A(R)_SFD'), ##is this right? or should it be A(R)_SFD?
+    ('FLUX_UNCERT_AP06_R', 'A(R)_SFD'), 
     ('FLUX_AP06_Z', 'A(Z)_SFD'),
     ('FLUX_UNCERT_AP06_Z', 'A(Z)_SFD'),
     ('FLUX_AP06_FUV', 'A(FUV)_SFD'),
     ('FLUX_UNCERT_AP06_FUV', 'A(FUV)_SFD'),
-    ('FLUX_AP06_NUV', 'A(FUV)_SFD'),
+    ('FLUX_AP06_NUV', 'A(NUV)_SFD'),
     ('FLUX_UNCERT_AP06_NUV', 'A(NUV)_SFD'),
     ('FLUX_AP06_W1', 'A(W1)_SFD'),
     ('FLUX_UNCERT_AP06_W1', 'A(W1)_SFD'),
@@ -109,8 +110,8 @@ multiply_columns_and_save(file1, file2, column_pairs, output_file)
     #inputs, we then remove any columns that we won't be using in order to make everything easier to keep track of
     #in addition to this, we also convert all of the Fluxes (that are not Herschel's) from nanamaggies to 
     #micro-janskies, as that is what CIGALE takes in. the factor used is after consulting with Kim about it
-    #as for the unit conversions on Herschel galaxies, I instead multiply it by 1000 to go from Janskies to micro
-    #janskies then wee create error columns for the Herschel fluxes by creating a column and multiplying every
+    #as for the unit conversions on Herschel galaxies, I instead multiply it by 1000 to go from Janskies to mJy
+    #hen we create error columns for the Herschel fluxes by creating a column and multiplying every
     #value by 5%. this number can be further finetuned. then, we do a few more checks such as an error limit cut,
     #as well as converting negatipve fluxes to blanks as well as rounding the unputs so that they can be compatible 
     #with CIGALE. then we output only what we need into a separate file
@@ -126,7 +127,7 @@ csv_output_file = tabledir + 'finalreal.csv'
 
 #specify the column we want to output
 columns_to_keep = [
-    'VF_ID', 'GALAXY', 'RA_MOMENT', 'DEC_MOMENT',
+    'VFID', 'GALAXY', 'RA_MOMENT', 'DEC_MOMENT',
     'FLUX_AP06_G',   'FLUX_UNCERT_AP06_G', 
     'FLUX_AP06_R',   'FLUX_UNCERT_AP06_R',
     'FLUX_AP06_Z',   'FLUX_UNCERT_AP06_Z',
@@ -144,23 +145,26 @@ columns_to_keep = [
 df = pd.read_csv(csv_input_file)
 
 
-#format the VF_ID column to 'VFIDxxxx' with leading zeros
-df['VF_ID'] = df['VF_ID'].apply(lambda x: f'VFID{x:04d}')
+# format VFID column if needed
+if df['VFID'].dtype != object:
+    df['VFID'] = df['VFID'].apply(lambda x: f'VFID{int(x):04d}')
+else:
+    df['VFID'] = df['VFID'].str.strip()
 
 
-#multiply all columns that start with 'FLUX; by 3.631e-3 as the conversion for nanomaggies to janskies
+#convert nanomaggies to mJy
 factor = 3.631e-3
 flux_columns = [col for col in df.columns if col.startswith('FLUX')]
 df[flux_columns] = df[flux_columns] * factor
 
 
-#multiply specific columns by 1000 before any further calculations to convert to jansky for herschel
-df[['70Flux__SMA_AP06', '100Flux_SMA_AP06', '160Flux_SMA_AP06']] = df[['70Flux_SMA_AP06', '100Flux_SMA_AP06', '160Flux_SMA_AP06']] * 1000
+#convert Herschel fluxes from Jy to mJy for CIGALE
+df[['70Flux_SMA_AP06', '100Flux_SMA_AP06', '160Flux_SMA_AP06']] = df[['70Flux_SMA_AP06', '100Flux_SMA_AP06', '160Flux_SMA_AP06']] * 1000
 
 
 #create error columns by multiplying the original flux columns by 5%
 error_cols = {
-    '70Flux_AP06_err': df['70Flux__SMA_AP06'] * 0.05,
+    '70Flux_AP06_err': df['70Flux_SMA_AP06'] * 0.05,
     '100Flux_AP06_err': df['100Flux_SMA_AP06'] * 0.05,
     '160Flux_AP06_err': df['160Flux_SMA_AP06'] * 0.05
     }
@@ -217,8 +221,8 @@ print(f"Selected columns successfully written to {csv_output_file}")
 
 #write out the flux data to a text file for CIGALE
 #define paths for north and south output files
-north_path = tabledir + 'vf_data_north.txt'
-south_path = tabledir + 'vf_data_south.txt'
+north_path = cigaledir + '/vf_north/vf_data_north.txt'
+south_path = cigaledir + '/vf_south/vf_data_south.txt'
 
 #read the main CSV file
 csv_input_file = tabledir + 'finalreal.csv'
@@ -238,7 +242,7 @@ flux_tab = pd.merge(flux_tab, redshift_tab[['VFID', 'redshift']], on='VFID', how
 north_flag = flux_tab['DEC_MOMENT'] > 32
 south_flag = flux_tab['DEC_MOMENT'] < 32
 
-
+#print(south_path)
 
 #function to check and create directories is they don't exist
 def check_dir(*paths):
@@ -252,13 +256,27 @@ def check_dir(*paths):
 #check and create directories for the output files
 check_dir(north_path, south_path)
 
+#used to debug
+#print(flux_tab.columns.tolist())
+print(
+    flux_tab.loc[
+        flux_tab["VFID"] == "VFID2760",
+        ["70Flux_SMA_AP06",
+         "70Flux_AP06_err",
+         "100Flux_SMA_AP06",
+         "100Flux_AP06_err",
+         "160Flux_SMA_AP06",
+         "160Flux_AP06_err"]
+    ]
+)
 
 
-#write north data
+
+#write north data --> uses BASS-g and BASS-r filters
 with open(north_path, 'w') as file:
     
     #create the file header
-    s = '# id redshift FUV FUV_err NUV NUV_err BASS-g BASS-g_err BASS-r BASS-r_err WISE1 WISE1_err WISE2 WISE2_err WISE3 WISE3_err WISE4 WISE4_err PACS_blue PACS_blue_err PACS_green PACS_green_err PACS_red PACS_red_err\n'
+    s = 'id redshift galex.FUV galex.FUV_err galex.NUV galex.NUV_err BASS-g BASS-g_err BASS-r BASS-r_err wise.W1 wise.W1_err wise.W2 wise.W2_err wise.W3 wise.W3_err wise.W4 wise.W4_err herschel.pacs.blue herschel.pacs.blue_err herschel.pacs.green herschel.pacs.green_err herschel.pacs.red herschel.pacs.red_err\n'
     file.write(s)
     
     #write data rows
@@ -266,24 +284,27 @@ with open(north_path, 'w') as file:
         s_gal = f"{n['VFID']} {n['redshift']} {n['FLUX_AP06_FUV']} {n['FLUX_UNCERT_AP06_FUV']} {n['FLUX_AP06_NUV']} {n['FLUX_UNCERT_AP06_NUV']} " \
                 f"{n['FLUX_AP06_G']} {n['FLUX_UNCERT_AP06_G']} {n['FLUX_AP06_R']} {n['FLUX_UNCERT_AP06_R']} " \
                 f"{n['FLUX_AP06_W1']} {n['FLUX_UNCERT_AP06_W1']} {n['FLUX_AP06_W2']} {n['FLUX_UNCERT_AP06_W2']} " \
+                f"{n['FLUX_AP06_W3']} {n['FLUX_UNCERT_AP06_W3']} {n['FLUX_AP06_W4']} {n['FLUX_UNCERT_AP06_W4']} " \
                 f"{n['70Flux_SMA_AP06']} {n['70Flux_AP06_err']} {n['100Flux_SMA_AP06']} {n['100Flux_AP06_err']} {n['160Flux_SMA_AP06']} {n['160Flux_AP06_err']}\n"
         file.write(s_gal)
         
         
         
-#write south data
+#write south --> uses decamDR1 filters
 with open(south_path, 'w') as file:
     
     #create file header
-    s = '# id redshift FUV FUV_err NUV NUV_err decamDR1-g decamDR1-g_err decamDR1-r decamDR1-r_err decamDR1-z decamDR1-z_err WISE1 WISE1_err WISE2 WISE2_err WISE3 WISE3_err WISE4 WISE4_err PACS_blue PACS_blue_err PACS_green PACS_green_err PACS_red PACS_red_err\n'
+    s = 'id redshift galex.FUV galex.FUV_err galex.NUV galex.NUV_err decamDR1-g decamDR1-g_err decamDR1-r decamDR1-r_err decamDR1-z decamDR1-z_err wise.W1 wise.W1_err wise.W2 wise.W2_err wise.W3 wise.W3_err wise.W4 wise.W4_err herschel.pacs.blue herschel.pacs.blue_err herschel.pacs.green herschel.pacs.green_err herschel.pacs.red herschel.pacs.red_err\n'
     file.write(s)
     
     #write data rows
     for _, n in flux_tab[south_flag].iterrows():
         s_gal = f"{n['VFID']} {n['redshift']} {n['FLUX_AP06_FUV']} {n['FLUX_UNCERT_AP06_FUV']} {n['FLUX_AP06_NUV']} {n['FLUX_UNCERT_AP06_NUV']} " \
-                f"{n['FLUX_AP06_G']} {n['FLUX_UNCERT_AP06_G']} {n['FLUX_AP06_R']} {n['FLUX_UNCERT_AP06_R']} " \
+                f"{n['FLUX_AP06_G']} {n['FLUX_UNCERT_AP06_G']} {n['FLUX_AP06_R']} {n['FLUX_UNCERT_AP06_R']} {n['FLUX_AP06_Z']} {n['FLUX_UNCERT_AP06_Z']} " \
                 f"{n['FLUX_AP06_W1']} {n['FLUX_UNCERT_AP06_W1']} {n['FLUX_AP06_W2']} {n['FLUX_UNCERT_AP06_W2']} " \
+                f"{n['FLUX_AP06_W3']} {n['FLUX_UNCERT_AP06_W3']} {n['FLUX_AP06_W4']} {n['FLUX_UNCERT_AP06_W4']} " \
                 f"{n['70Flux_SMA_AP06']} {n['70Flux_AP06_err']} {n['100Flux_SMA_AP06']} {n['100Flux_AP06_err']} {n['160Flux_SMA_AP06']} {n['160Flux_AP06_err']}\n"
+        print(repr(s_gal))
         file.write(s_gal)
     
     

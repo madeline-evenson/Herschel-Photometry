@@ -45,38 +45,103 @@ def inverse_variance_into_uncertainty(input_file, output_file):
         
 # %%
 
-
-
-#adding extinctino into the template table
 def multiply_columns_and_save(file1, file2, column_pairs, output_file):
-    
-    #load the csv files
-    df1 = pd.read_csv(file1)
-    df2 = pd.read_csv(file2)
-    
-    #initialize a dataframe to store the results
-    result_df = df1.copy()
-    
-    #multiply each pair of columns and store the result in the result_df 
-    for col1, col2 in column_pairs:
-        if col1 not in df1.columns:
-            raise ValueError(f"Column '{col1}' not found in {file1}")
-        if col2 not in df2.columns:
-            raise ValueError(f"Column '{col2}' not found in {file2}")
-            
-            
-        #perform the multiplication with extinction correction
-        result_df[col1] = df1[col1] * (10 ** (df2[col2] / 2.5))
-        
-        #replace 0, infinity, or very large/small values with NaN
-        result_df[col1] = result_df[col1].replace([0, np.inf, -np.inf], np.nan)
-        
-    #save the resulting dataframe to a new csv file
+
+    import pandas as pd
+
+    flux_df = pd.read_csv(file1)
+    ext_df = pd.read_csv(file2)
+
+    # Remove duplicate column names if they exist
+    flux_df = flux_df.loc[:, ~flux_df.columns.duplicated()]
+    ext_df = ext_df.loc[:, ~ext_df.columns.duplicated()]
+
+
+    # Rename VF_ID -> VFID if needed ---> this step used so this function can be used in both
+        #CIGALE-inputs-text-file.py and vf-ephots-text-file.py
+    if 'VF_ID' in flux_df.columns and 'VFID' not in flux_df.columns:
+        flux_df = flux_df.rename(columns={'VF_ID':'VFID'})
+
+    if 'VF_ID' in ext_df.columns and 'VFID' not in ext_df.columns:
+        ext_df = ext_df.rename(columns={'VF_ID':'VFID'})
+
+
+    #standardize VFID formatting --> again so this function can be used in both .py files
+    def format_vfid(series):
+
+        return (
+            series
+            .astype(str)
+            .str.strip()
+            .str.replace('VFID', '', regex=False)
+            .str.replace('.0', '', regex=False)
+            .astype(int)
+            .apply(lambda x: f"VFID{x:04d}")
+        )
+
+
+    flux_df['VFID'] = format_vfid(flux_df['VFID'])
+    ext_df['VFID'] = format_vfid(ext_df['VFID'])
+
+    #print statements to double check nothing weird happened after merge
+    print("===== MERGE CHECK =====")
+    print("Photometry rows:", len(flux_df))
+    print("Extinction rows:", len(ext_df))
+    print("Photometry VFID duplicates:", flux_df['VFID'].duplicated().sum())
+    print("Extinction VFID duplicates:", ext_df['VFID'].duplicated().sum())
+
+
+    #keep only extinction columns needed for correction --> mostly used in vf_ephots-text-file.py
+    ext_keep = ['VFID']
+
+    for _, ext_col in column_pairs:
+        if ext_col not in ext_keep:
+            ext_keep.append(ext_col)
+
+    ext_df = ext_df[ext_keep]
+
+
+    #merge extinction information
+    result_df = flux_df.merge(
+        ext_df,
+        on='VFID',
+        how='left',
+        suffixes=('', '_ext')
+    )
+
+
+    print("Matched extinction values:")
+    print(result_df['VFID'].isin(ext_df['VFID']).sum())
+
+
+    #apply extinction correction
+    #F_corrected = F * 10^(0.4*A_lambda)
+    for flux_col, ext_col in column_pairs:
+
+        if flux_col in result_df.columns and ext_col in result_df.columns:
+
+            result_df[flux_col] = (
+                result_df[flux_col] *
+                10**(0.4 * result_df[ext_col])
+            )
+
+
+    #remove extinction columns after correction --> cleans up files because we don't need this info anymore
+    drop_cols = [
+        col for col in result_df.columns
+        if col.startswith('A(')
+    ]
+
+    result_df = result_df.drop(columns=drop_cols)
+
+
+    #final duplicate cleanup
+    result_df = result_df.loc[:, ~result_df.columns.duplicated()]
+
+
     result_df.to_csv(output_file, index=False)
-    
-    
-    
-    
+
+    print(f"File successfully written to {output_file}")
 # %%
 
 #function to convert a .fits file to a .csv file

@@ -276,146 +276,206 @@ galaxy
 #The other set of plots should plot the ellipse number vs the difference in flux of the respective ellipses (effectively the rate of change. 
 # was having trouble with setting up the rate of change correctly. 
 
-# In[13]:
 
+# %%
 
-#profile graphing 
+#profile graphing 2.0
 
-#load the photometry data
+#load photometry data
 csv_file = tabledir + '/Photometrytesting2.csv'
 galaxy = Table.read(csv_file)
 
+
 #define semi-major axis (SMA) and flux labels
-sma_labels = [f'SMA_AP0{i}' for i in range(1, 9)]
+sma_labels = [f'SMA_AP0{i}' for i in range(1,9)]
 wavelengths = [70, 100, 160]
 
 
-#loop over each galaxy
+#Herschel pixel scales (arcsec/pixel)
+pixscale_map = {
+    70: 1.60000001784,
+    100: 1.60000001784,
+    160: 3.20000003568
+    }
+
+
+#loop over each galaxy 
 for i in range(len(galaxy)):
     galaxy_name = str(galaxy['GALAXY'][i])
     VFID = f"VFID{int(galaxy['VF_ID'][i]):04d}"
     EPLI = galaxy['BA_MOMENT'][i]
-
+    
     #determine which bands have valid data
     valid_bands = []
-
-
+    
     for j, wave in enumerate(wavelengths):
         has_valid = False
-    
+        
         for sma_label in sma_labels:
             flux_col = f'{wave}Flux_{sma_label}'
             if flux_col in galaxy.colnames:
                 val = galaxy[flux_col][i]
-                if not np.isnan(val):
+                if np.isfinite(val):
                     has_valid = True
                     break
-            
+                
         if has_valid:
             valid_bands.append((wave, mycolors[j]))
-
-    #skip galaxy if no valid bands:
+            
+    #skip galaxy if no valid bands
     if len(valid_bands) == 0:
         continue
-
-
+    
     #create dynamic subplot grid
     ncols = len(valid_bands)
-    fig, axes = plt.subplots(2, ncols, figsize = (5*ncols, 10))
-
-
-    #handle case where ncols==1
+    fig, axes = plt.subplots(2, ncols, figsize=(5*ncols, 10))
+    
+    #handle case where ncols == 1
     if ncols == 1:
         axes = np.array([[axes[0]], [axes[1]]])
-    
-    
-    #loop over only valid bands
+        
+        
+    #loop over valid bands
     for col_idx, (wave, color) in enumerate(valid_bands):
-    
-        sma_values = []
-        sma_values_2 = []
+        
+        
+        
+        ##################################################
+        ##### 1: flux profiles using all 8 apertures #####
+        ##################################################
+        
+        flux_radii = []
         flux_values = []
+        
+        for sma_label in sma_labels:
+            flux_col = f'{wave}Flux_{sma_label}'
+            
+            if flux_col not in galaxy.colnames:
+                continue
+            
+            flux_val = galaxy[flux_col][i]
+            sma_pix = galaxy[sma_label][i]
+            
+            if not np.isfinite(flux_val) or not np.isfinite(sma_pix):
+                continue
+            
+            #convert SMA from Legacy pixels to arcsec
+            sma_arcsec = sma_pix * 0.262
+            
+            #keep flux as aperture_sum from photometry
+            flux_radii.append(sma_arcsec)
+            flux_values.append(flux_val)
+            
+            
+            
+            
+        ##################################################################
+        ##### 2: surface brightness profile using aperture distances #####
+        ##################################################################
+        
+        sb_mid_radii = []
         sb_values = []
-    
+        
         for k in range(len(sma_labels) - 1):
             sma_label_1 = sma_labels[k]
             sma_label_2 = sma_labels[k+1]
-        
+            
             flux_col_1 = f'{wave}Flux_{sma_label_1}'
             flux_col_2 = f'{wave}Flux_{sma_label_2}'
+            
+            if flux_col_1 not in galaxy.colnames or flux_col_2 not in galaxy.colnames:
+                continue
+            
+            flux_1 = galaxy[flux_col_1][i]
+            flux_2 = galaxy[flux_col_2][i]
+            
+            sma_pix_1 = galaxy[sma_label_1][i]
+            sma_pix_2 = galaxy[sma_label_2][i]
+            
+            if (not np.isfinite(flux_1) or not np.isfinite(flux_2) or not np.isfinite(sma_pix_1) or not np.isfinite(sma_pix_2)):
+                continue
+            
+            
+            #convert SMA from Legacy pixels to arcsec
+            a1 = sma_pix_1 * 0.262
+            a2 = sma_pix_2 * 0.262
+            
+            #semi-minor axes using BA_MOMENT
+            b1 = a1 * EPLI
+            b2 = a2 * EPLI
+            
+            #calculate annulus area between consecutive ellipses
+            area_annulus = np.pi * (a2 * b2 - a1 * b1)
+            
+            if area_annulus <= 0:
+                continue
+            
+            annulus_flux = flux_2 - flux_1
+            sb = annulus_flux / area_annulus
+            
+            #plot SB at midpoint of the annulus
+            mid_radius = 0.5 * (a1 + a2)
+            
+            sb_mid_radii.append(mid_radius)
+            sb_values.append(sb)
+
+
+
+
+        #######################
+        ##### 3: plotting #####
+        #######################
+
+        #top row: cumulative flux profile --> 8 points if all apertures are valid
+        ax_flux = axes[0, col_idx]
         
-            if flux_col_1 in galaxy.colnames and flux_col_2 in galaxy.colnames:
-                flux_1 = galaxy[flux_col_1][i]
-                flux_2 = galaxy[flux_col_2][i]
+        if len(flux_radii) > 0:
+            ax_flux.plot(flux_radii, flux_values, marker='o', color=color)
             
-                if np.isnan(flux_1) or np.isnan(flux_2):
-                    continue
-            
-                sma_pixels_1 = galaxy[sma_label_1][i]
-                sma_pixels_2 = galaxy[sma_label_2][i]
-            
-                sma_arcsec_1 = sma_pixels_1 * 0.262 #converting to arcsec
-                sma_arcsec_2 = sma_pixels_2 * 0.262 
-            
-                sma_values.append(sma_arcsec_1)
-                sma_values_2.append(sma_arcsec_2)
-            
-                #scale by pixel size
-                if wave in [70, 100]:
-                    scale = 1.60000001784
-                else:
-                    scale = 3.20000003568
-                
-                flux_1 *= scale
-                flux_2 *= scale
-            
-                flux_values.append(flux_2)
-            
-                ### old area_annulus --___> area_annulus = np.pi * (sma_arcsec_2**2 - sma_arcsec_1**2)
-                
-                #fix area_annulus to calculate area of **ellipse**
-                a1 = sma_arcsec_1
-                a2 = sma_arcsec_2
-                
-                b1 = a1 * EPLI
-                b2 = a2 * EPLI
-                
-                area_annulus = np.pi * (a2*b2 - a1*b1)
-                
-                
-                if area_annulus > 0:
-                    sb_values.append((flux_2 - flux_1) / area_annulus)
-                
-                
-        ##### plotting #####
-        if sma_values:
-            axes[0, col_idx].plot(sma_values_2, flux_values, marker='o', color=color)
-            axes[0, col_idx].set_title(f'{wave} µm Flux Profile')
-            axes[0, col_idx].set_xlabel('Semi-Major Axis (arcsec)')
-            axes[0, col_idx].set_ylabel('Flux')
+        ax_flux.set_title(f'{wave} µm Flux Profile')
+        ax_flux.set_xlabel('Semi-Major Axis (arcsec)')
+        ax_flux.set_ylabel('Flux')
         
-        if sb_values:
-            mid_radii = 0.5 * (np.array(sma_values) + np.array(sma_values_2))
-            axes[1, col_idx].plot(mid_radii, sb_values, marker='s', color=color)
-            #axes[1, col_idx].plot(sma_values, sb_values, marker='s', color=color)
-            axes[1, col_idx].set_title(f'{wave} µm Surface Brightness')
-            axes[1, col_idx].set_xlabel('Semi-Major Axis (arcsec)')
-            axes[1, col_idx].set_ylabel('Surface Brightness (Jy/arcsec²)')
+        
+        
+        #bottom row: surface brightness profile --> 7 points max because uses consecutive ellipses
+        ax_sb = axes[1, col_idx]
+        
+        if len(sb_mid_radii) > 0:
+            ax_sb.plot(sb_mid_radii, sb_values, marker='s', color=color)
+            
+        ax_sb.set_title(f'{wave} µm Surface Brightness')
+        ax_sb.set_xlabel('Semi-Major Axis (arcsec)')
+        ax_sb.set_ylabel('Surface Brightness')
+        
+        
         
     #title figure
-    fig.suptitle(f'{VFID} — {galaxy_name} Photometry Profiles',
-             fontsize=18, fontweight='bold')
-
+    fig.suptitle(f'{VFID} - {galaxy_name} Photometry Profiles', fontsize=18, fontweight='bold')
+        
     #adjust layout
     fig.tight_layout(rect=[0, 0, 1, 0.96])
-    
+        
+        
     #save figure
     output_path = f'{htmldir}/profiles/{VFID}-{galaxy_name}_flux_sb_profile.png'
     fig.savefig(output_path, dpi=150)
     plt.close(fig)
-
+        
 print('All flux and surface brightness profiles have been generated.')
 
-print(galaxy.colnames)
 
-# %%
+
+
+
+
+
+
+
+
+
+
+
+
+
+
