@@ -1,7 +1,13 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# **Tom's notes:** In order to measure photometry in the Herschel bands in the same areas of the other photometry measurements, we will also need to apply the same masks that are applied within the other measurements. For the most parts these masks mask out problematic stars and things that are not part of the galaxies, but even if there are no star emissions within the Herschel bands, we still want to keep a consistent area of measurements within the ellipses. This notebook is purely to get the masking fits and impose it onto the Herschel images correctly, as well as output those as FITS. It does not calculate the photometry of these galaxies.
+# **Tom's notes:** In order to measure photometry in the Herschel bands in the same areas of the other 
+#photometry measurements, we will also need to apply the same masks that are applied within the other 
+#measurements. For the most parts these masks mask out problematic stars and things that are not part 
+#of the galaxies, but even if there are no star emissions within the Herschel bands, we still want to 
+#keep a consistent area of measurements within the ellipses. This notebook is purely to get the masking 
+#fits and impose it onto the Herschel images correctly, as well as output those as FITS. It does not 
+#calculate the photometry of these galaxies.
 
 # In[12]:
 

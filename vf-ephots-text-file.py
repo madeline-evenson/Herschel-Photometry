@@ -97,7 +97,7 @@ table.write(
 file1 = tabledir + 'ephot_outputuncert.csv'
 file2 = tabledir + 'trimmedextinction.csv'
 
-#debug check for input diles
+#debug check for input files
 df1_check = pd.read_csv(file1)
 df2_check = pd.read_csv(file2)
 

@@ -6,11 +6,11 @@ Created on Mon Mar 30 10:29:27 2026
 @author: madeline.evenson
 """
 
-#one of the main tasks of the project is generating an HTML website with the purpose of having a visual catalog of the sample of Herschel galaxies
-#we need this to more easily reference each galaxy, as well as visually inspect its various properties like image quality, ellipse generation, and profile trends
+#one of the main tasks of the project is generating an HTML website with the purpose of 
+#having a visual catalog of the sample of Herschel galaxies
+#we need this to more easily reference each galaxy, as well as visually inspect its 
+#various properties like image quality, ellipse generation, and profile trends
 
-#this notebook has 4 code blocks in it --> two to call all the necessary functions and set the directed paths, one to gather images from the Legacy Survey's online website, and one to write the general "Home" html webpage
-#the following 2 codes are used to call the functions and set the directed paths
 
 # %%
 #import the necessary packages (some might be unnecessary)
@@ -19,29 +19,10 @@ from astropy.table import Table
 from matplotlib import pyplot as plt
 import os
 import numpy as np
-from astropy.io.ascii import masked
-from astropy.io import ascii
-import glob
 import wget
 from astropy.io import fits
-import matplotlib.image as mpimg
 from astropy.wcs import WCS
-from scipy.stats import scoreatpercentile
-from astropy.visualization import simple_norm
-from reproject import reproject_interp
-import sys
-from IPython.display import clear_output
-from photutils.detection import DAOStarFinder
-from astropy.stats import sigma_clipped_stats
-from photutils.aperture import CircularAperture
-from astropy.visualization import SqrtStretch
-from astropy.visualization import ImageNormalize
-from astropy.visualization import LogStretch
-import astropy.units as u
-from IPython.display import clear_output
-from matplotlib import colors
 import warnings
-import csv
 import time
 from urllib.error import ContentTooShortError
 
@@ -65,9 +46,11 @@ from photometry_funct import *
 
 # %%
 
-#this next code block generates cutout pngs from the Legacy Survey by first finding if there is a galaxy .fits file inside the specified folders of galaxies
+#this next code block generates cutout pngs from the Legacy Survey by first finding if there is 
+#a galaxy .fits file inside the specified folders of galaxies
 #then it extracts the RA and DEC of those galaxies
-#using these two points, it searches the Legacy Survey to find an image of the galaxy and saves it locally
+#using these two points, it searches the Legacy Survey to find an image of the galaxy and 
+#saves it locally
 
 # %%
 
@@ -82,12 +65,16 @@ max_retries = 5
 for i in range(len(galaxy)):
     galaxy_name = str(galaxy['GALAXY'][i])
     path = datadir + '/pipeline/' + galaxy_name
+    
     destination_folder = path + '/HPPUNIMAPR/'
     partial_name = 'hpacs_25HPPUNIMAPR'
     found_files = find_files(destination_folder, partial_name)
+    
     VFID = f"VFID{int(galaxy['VF_ID'][i]):04d}"
     filename_LS = os.path.join(homedir, "HTML-building/galaxy/png", f"{VFID}-{galaxy_name}-LS.jpg")
+    
     os.makedirs(os.path.join(homedir, "HTML-building/galaxy/png"), exist_ok=True)
+    
     RA = galaxy['RA_MOMENT'][i]
     DEC = galaxy['DEC_MOMENT'][i]
     
@@ -96,11 +83,13 @@ for i in range(len(galaxy)):
             found_file = found_files[0]
             image, head = fits.getdata(found_file, header=True)
             wcs_info = WCS(head)
+            
             pscale = np.abs(float(head['CDELT1'])) #grab transformation matrix of Herschel image
             xsize = np.abs(float(head['NAXIS1'])) #grab length of Herschel image
             xsize_arcsec = pscale*3600*xsize #length convert to arcseconds
             imsize = int(xsize_arcsec / pixscale) #convert length to an integer
             imsize = str(imsize) #convert integer length to a string
+            
             image_url = f'https://www.legacysurvey.org/viewer/cutout.jpg?ra={RA}&dec={DEC}&layer=ls-dr9&size={imsize}&pixscale={1}'
             print(image_url)
             print(f'filename_LS = {filename_LS:s}')

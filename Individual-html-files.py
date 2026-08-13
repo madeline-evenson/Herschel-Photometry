@@ -40,7 +40,8 @@ datadir = homedir+'/masking/' #set to where the completed mask fits are
 # %%
 
 
-#this is the code to write out individual HTML files for the galaxies. these can be accessed using the link in the HTML website generation notebook
+#this is the code to write out individual HTML files for the galaxies. these can be 
+#accessed using the link in the HTML website generation notebook
 
 
 #individual html writing

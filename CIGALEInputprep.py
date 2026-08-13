@@ -47,8 +47,6 @@ def inverse_variance_into_uncertainty(input_file, output_file):
 
 def multiply_columns_and_save(file1, file2, column_pairs, output_file):
 
-    import pandas as pd
-
     flux_df = pd.read_csv(file1)
     ext_df = pd.read_csv(file2)
 

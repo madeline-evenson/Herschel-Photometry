@@ -1,15 +1,14 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# **Tom's notes:** One of the two most important notebooks of this project. This notebook covers both calculating photometry data from the Herschel .fits files, generating images from those .fits files, as well as generating individual galaxies' HTML files that contain these images amongst other data. 
-# 
-# The photometry part of the program is attached alongside the generating images part because during troubleshooting this was the easiest. But, because the image generation section takes by far the most time, feel free to comment the sections out in order to run photometry more quickly.
-# 
-# There is also an unfinished profile graphing code block in progress. The idea is to calculate both the flux change from ellipse to ellipse of these galaxies, as well as the total flux as you get to bigger and bigger ellipses, and then graph both of these for all galaxies onto a postage stamp of 4-6 plots. 
-# 
-# Finally, the HTML generation outputs the galaxies and links them together, ordered by their VFID.
-# 
-# The first two blocks are to import the necessary packages. 
+# **Tom's notes:** One of the two most important notebooks of this project. This notebook covers both calculating photometry data from 
+#the Herschel .fits files, generating images from those .fits files, as well as generating individual galaxies' HTML files that contain
+#these images amongst other data. The photometry part of the program is attached alongside the generating images part because during 
+#troubleshooting this was the easiest. But, because the image generation section takes by far the most time, feel free to comment the 
+#sections out in order to run photometry more quickly. There is also an unfinished profile graphing code block in progress. The idea is 
+#to calculate both the flux change from ellipse to ellipse of these galaxies, as well as the total flux as you get to bigger and bigger 
+#ellipses, and then graph both of these for all galaxies onto a postage stamp of 4-6 plots. Finally, the HTML generation outputs the galaxies 
+#and links them together, ordered by their VFID. The first two blocks are to import the necessary packages. 
 
 # In[9]:
 
@@ -29,7 +28,6 @@ from astropy.table import Table
 from astropy.wcs import WCS
 from astropy.io import fits
 
-from matplotlib import colors
 
 from photutils.aperture import aperture_photometry
 
@@ -64,9 +62,13 @@ from masking_funct import *
 from photometry_funct import *
 
 
-# **Tom's notes:** This is the code to both calculate the photometry AND generating .png files to visualize the galaxies. I do think it's probably best to separate them, but I never managed to get around to it. The code reads in the photometry table's data regarding namely galaxy, RA, DEC, as well as their ellipse data, namely BA, PA, SMA. The program does do photometry over all 8 SMA values, so it calculates the Herschel photometry 8 times for each image. 
-# 
-# Because Herschel's naming isn't straightforward, I find individual files inside the code itself, and then perform photometry on them using photutils. To disable the image generation, comment out both the v1 and v2 calculations, as well as the imdisplay2 functions. There are thesebits of code for every band, so will need to comment out 3 times.
+# **Tom's notes:** This is the code to both calculate the photometry AND generating .png files to visualize the galaxies. I do think 
+#it's probably best to separate them, but I never managed to get around to it. The code reads in the photometry table's data regarding 
+#namely galaxy, RA, DEC, as well as their ellipse data, namely BA, PA, SMA. The program does do photometry over all 8 SMA values, so it 
+#calculates the Herschel photometry 8 times for each image. Because Herschel's naming isn't straightforward, I find individual files 
+#inside the code itself, and then perform photometry on them using photutils. To disable the image generation, comment out both 
+#the v1 and v2 calculations, as well as the imdisplay2 functions. There are thesebits of code for every band, so will need to 
+#comment out 3 times.
 
 # In[11]:
 

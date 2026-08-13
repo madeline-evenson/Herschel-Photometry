@@ -223,7 +223,7 @@ def create_combined_mask(
     PAN
 ):
     
-    #Create a combined mask consisting of original WISE/R mask and new 3x larger ellipse
+    #Create a combined mask consisting of original WISE/R mask and new 2x larger ellipse
 
 
     current_shape = image_data.shape

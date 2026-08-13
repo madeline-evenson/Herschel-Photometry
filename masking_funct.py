@@ -7,49 +7,23 @@
 #import necessary libraries
 
 import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
-import astropy.units as u
-import pandas as pd
 import numpy as np
-import glob 
-import sys
 import os
 #import wget
 
 import warnings
 warnings.filterwarnings('ignore')
 
-from numpy.ma import is_masked
 
-from astropy.table import Table
-from astropy.io.ascii import masked
-from astropy.io import ascii
 from astropy.io import fits
 from astropy.wcs import WCS
-from astropy.coordinates import Angle
-from astropy.nddata import CCDData
-from astropy.stats import sigma_clipped_stats
-from astropy.stats import gaussian_sigma_to_fwhm
-from astropy.visualization import simple_norm
-from astropy.visualization import SqrtStretch
 from astropy.visualization import ImageNormalize
 from astropy.visualization import LogStretch
-from astropy.visualization import MinMaxInterval
 
-from matplotlib.patches import Rectangle
-from matplotlib.collections import PatchCollection
-from matplotlib import colors
-
-from scipy import stats
 from scipy.stats import scoreatpercentile
 
 from reproject import reproject_interp
 
-from IPython.display import clear_output
-
-from photutils.detection import DAOStarFinder
-from photutils.aperture import CircularAperture
-from photutils.isophote import EllipseGeometry
 from photutils.aperture import EllipticalAperture
 
 

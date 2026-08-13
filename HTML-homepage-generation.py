@@ -39,8 +39,9 @@ from photometry_funct import *
     #password: xyvQHP,wHLoT
 
 #website writes a standard HTML webpage, then iterates over the list of galaxies and generates their path to the specific pages,
-#   the legacy survey postage stamps, as well as any of the 3 bands of Herschel for every galaxy
-#there is also a B/G significant mask and R significant mask parameter that signifies whenever over 70% of a galaxy is masked or not
+#the legacy survey postage stamps, as well as any of the 3 bands of Herschel for every galaxy
+#there is also a B/G significant mask and R significant mask parameter that signifies whenever over 70% 
+#of a galaxy is masked or not
 
 # %%
 
